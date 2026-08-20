@@ -39,21 +39,21 @@
      另外 Oswald、Teko、Space Grotesk 有變數字重但只給到 700。
 
      **Noto Sans TC 要留著 400 和 500，即使字重選單只開 600~800。**
-     body 是 `system-ui, "Noto Sans TC"`，而 system-ui 在 Windows 是 Segoe UI、
-     沒有中文字 —— 所以整頁的中文都靠這支網頁字型。頁面實際用到的字重是
+     body 是 `Inter, "Noto Sans TC"`，而 Inter 沒有中文字 —— 所以整頁的
+     中文都靠這支網頁字型。頁面實際用到的字重是
      400（h1、內文）和 500（面板的下拉、滑桿數值、輔助線標籤，全站共 14 處中文）。
      少載一級，CSS 就會照配對規則往別級掉，整批中文變粗或變細一級，
-     同一行的英數卻不變（英數被 system-ui 先接走）。
+     同一行的英數卻不變（英數被 Inter 先接走）。
      **字重選單是「文字形狀」的事，和頁面本身的排版是兩回事**，兩邊的清單不能綁在一起。
      Noto Serif TC 不用補：它只出現在下拉的 value 裡，不參與頁面排版。 -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Manrope:wght@600;700;800&family=Sofia+Sans+Extra+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Manrope:wght@600;700;800&family=Sofia+Sans+Extra+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700;800&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   /* color-scheme 讓瀏覽器自己的 UI（頁面捲軸、表單控制項）跟著走深色，
      不用手動改樣式。淺色捲軸配深色頁面很突兀 */
   html { background: #05070c; color-scheme: dark; }
-  body { font-family: system-ui, "Noto Sans TC", sans-serif; overflow-x: hidden; }
+  body { font-family: Inter, "Noto Sans TC", sans-serif; overflow-x: hidden; }
 
   /* 畫布釘住不動，內容從它上面捲過去。
      原站的做法是把 canvas 放進一個橫跨兩個 section 的 sticky 容器；
@@ -398,16 +398,19 @@
   /* 同樣 11px，EN 的墨水高只有 8px、中 是 10px —— 中文字面本來就比拉丁字大。
      縮到 10px 之後兩邊的墨水高剛好都是 8px（EN 是 8/0、中 是 7/1），
      看起來才一樣重。 */
-  /* 光學對齊。這幾個數字是量出來的，不是猜的（量法：用零寬探針取基線，
-     再配合 canvas 的 actualBoundingBox 算墨水中心，和軌道中心相減）：
-       水平 — 字距多加在最後一個字後面，EN 的墨水中心偏左 0.47px。
-              border-box 之下 padding-left 只把內容中心推一半，所以給 0.93px。
-       垂直 — 行框置中不等於墨水置中：EN 偏低 0.29px、中（10px）偏低 1px。 */
+  /* 光學對齊。這幾個數字是量出來的，不是猜的：零寬探針取基線，再把同一支
+     字型放大 20 倍畫進 canvas、掃像素取墨水邊界，回推到 1× 的位移。
+     **換過字型就要重量**（這一組是 Inter 11px / Noto Sans TC 10px 量的）：
+       水平 — 字距多加在最後一個字後面，排版中心比墨水中心右偏半格。
+              EN +0.155px、中 +0.175px。用 translate 不用 padding：
+              border-box 之下 padding 只把內容中心推一半，換算多一層。
+       垂直 — 行框置中不等於墨水置中。Inter 的 EN 剛好對上（0），
+              中（10px）偏低 0.486px。 */
   #nav .switch--lang .opt--l {
-    left: 0; padding-left: 0.93px; transform: translateY(-0.29px);
+    left: 0; transform: translateX(0.155px);
   }
   #nav .switch--lang .opt--r {
-    right: 0; font-size: 10px; transform: translateY(-1px);
+    right: 0; font-size: 10px; transform: translate(0.175px, -0.486px);
   }
   #nav .switch--lang[aria-pressed="false"] .opt--l,
   #nav .switch--lang[aria-pressed="true"]  .opt--r { color: #fff; }
