@@ -38,22 +38,22 @@
      要加就先照 references/insights.md 把 data-fixed 那一套加回去。
      另外 Oswald、Teko、Space Grotesk 有變數字重但只給到 700。
 
-     **Noto Sans TC 要留著 400 和 500，即使字重選單只開 600~800。**
-     body 是 `Inter, "Noto Sans TC"`，而 Inter 沒有中文字 —— 所以整頁的
-     中文都靠這支網頁字型。頁面實際用到的字重是
-     400（h1、內文）和 500（面板的下拉、滑桿數值、輔助線標籤，全站共 14 處中文）。
-     少載一級，CSS 就會照配對規則往別級掉，整批中文變粗或變細一級，
-     同一行的英數卻不變（英數被 Inter 先接走）。
-     **字重選單是「文字形狀」的事，和頁面本身的排版是兩回事**，兩邊的清單不能綁在一起。
-     Noto Serif TC 不用補：它只出現在下拉的 value 裡，不參與頁面排版。 -->
+     **首屏只留 Poppins 400 與 Noto Sans TC 400/700。**
+     body 是 `Poppins, "Noto Sans TC"`，而 Poppins 沒有中文字 —— 所以整頁的
+     中文都靠 Noto Sans TC。實測整站四段捲完、中英各走一次，可見元素只用到
+     字重 400；700 是粒子字的預設字重（textFont()）。500/600 只出現在藏起來的
+     面板與輔助線上，和「文字形狀」下拉裡的備選字型一起延後載入
+     （見 ensurePanelFonts）—— 它們的 @font-face 宣告加起來比整頁還大：
+     兩個中文家族的每一個字重都被切成上百段 unicode-range，六個家族一次宣告，
+     那支 CSS 解壓後 975KB，而且擋著首次繪製。 -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700;800&family=Noto+Serif+TC:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Manrope:wght@600;700;800&family=Sofia+Sans+Extra+Condensed:wght@600;700;800&family=Playfair+Display:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400&family=Noto+Sans+TC:wght@400;700&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   /* color-scheme 讓瀏覽器自己的 UI（頁面捲軸、表單控制項）跟著走深色，
      不用手動改樣式。淺色捲軸配深色頁面很突兀 */
   html { background: #05070c; color-scheme: dark; }
-  body { font-family: Inter, "Noto Sans TC", sans-serif; overflow-x: hidden; }
+  body { font-family: Poppins, "Noto Sans TC", sans-serif; overflow-x: hidden; }
 
   /* 畫布釘住不動，內容從它上面捲過去。
      原站的做法是把 canvas 放進一個橫跨兩個 section 的 sticky 容器；
@@ -300,9 +300,9 @@
     max-width: 1280px; margin: 0 auto; height: 100%;
     display: flex; align-items: center; gap: 30px; font-size: 13px;
   }
-  /* 左邊那三個連結是 16px。用 > 限定**直接子層** —— 右上的工具鈕包在
+  /* 左邊那三個連結是 15px。用 > 限定**直接子層** —— 右上的工具鈕包在
      .tools 裡，不該跟著變。 */
-  #nav .bar > a:not(.logo):not(.play) { font-size: 16px; }
+  #nav .bar > a:not(.logo):not(.play) { font-size: 15px; }
   /* 字標和第一個連結之間再多留一點：那是兩種東西的分界，
      和連結之間的間距一樣寬的話會讀成四個並列的項目。 */
   #nav .logo + a { margin-left: 8px; }
@@ -4177,7 +4177,30 @@ const TEXT_DEPTH = 0.50;     // 厚度 ≈ 字高的一半
    側邊又看得出來的那一檔。 */
 const TEXT_WALL = 0.30;
 
+/* 面板才用得到的字型（六個家族的其餘字重）。首屏不載：它們的 @font-face
+   宣告加起來比整頁還大，而且面板是 display:none，正常瀏覽永遠選不到。 */
+const PANEL_FONTS = 'https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;600;800'
+  + '&family=Noto+Serif+TC:wght@600;700;800&family=Montserrat:wght@600;700;800'
+  + '&family=Manrope:wght@600;700;800&family=Sofia+Sans+Extra+Condensed:wght@600;700;800'
+  + '&family=Playfair+Display:wght@600;700;800&display=swap';
+const BASE_FAMILY = '"Noto Sans TC", sans-serif';
+const BASE_WEIGHTS = ['400', '700'];   // 首屏那支 <link> 真的載了的字重
+let panelFonts = null;
+function ensurePanelFonts() {
+  if (fontSel.value === BASE_FAMILY && BASE_WEIGHTS.indexOf(weightSel.value) >= 0)
+    return Promise.resolve();
+  if (!panelFonts) panelFonts = new Promise((done) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = PANEL_FONTS;
+    // 載失敗也要往下走：拿備援字型畫，總比整個形狀不出現好
+    l.onload = l.onerror = done;
+    document.head.appendChild(l);
+  });
+  return panelFonts;
+}
+
 async function sampleText(text) {
+  await ensurePanelFonts();
   const font = textFont();
   /* 沒等字型載完就量寬度、畫字，量到的會是備援字型 —— 中文尤其明顯。
 
@@ -5609,6 +5632,8 @@ const progressLabel = document.getElementById('vProgress');
 const modeLabel = document.getElementById('mode');
 
 const heroPin  = document.querySelector('.sec--hero .pin');
+const heroTitle = document.querySelector('.sec--hero h1');
+let heroFade = 1;   // 由 readScroll 算，見那裡
 const copyEls  = [...document.querySelectorAll('.copy')];
 /* 每段內文三個數字：標題透明度、內文透明度、垂直位移。
    一般的段落三者連動（同一個 revealOf 的值）；分段揭示的段落各走各的。 */
@@ -5930,6 +5955,10 @@ function copyStateOf(el, i, vh, ref) {
 function readScroll() {
   const vh = window.innerHeight;
   const ref = window.scrollY + vh / 2;
+  /* 首頁的標題：和其他段落同一條淡出規則（見 copyStateOf 的 fade）。
+     .pin 不是 sticky，所以上緣就是「文件位置 − 捲動量」。 */
+  heroFade = Math.min(1, Math.max(0,
+    (docTop(heroTitle) - window.scrollY) / (TOP_BAND * vh)));
   copyState = copyEls.map((el, i) => copyStateOf(el, i, vh, ref));
   if (STOPS.length < 2) return;
 
@@ -6266,12 +6295,12 @@ function tick() {
   }
 
   /* Hero 標題：開場逐字浮現 + 捲動淡出，兩件事分開處理。
-     捲動淡出給整個 .pin（收斂才走到 42% 就已經淡完，讓形狀獨佔畫面），
+     捲動淡出給整個 .pin，跟**位置**走不跟進度走（和其他三段同一條線），
      開場則是逐字改透明度 —— 兩層相乘，一載入就往下捲也不會打架。
 
      計時用 elapsed，不另外記變數：它本來就是從載入開始累加的秒數，
      而且分頁切走再回來時 dt 有夾住，不會一口氣跳完。 */
-  heroPin.style.opacity = Math.max(0, 1 - smoothProgress * 2.4);
+  heroPin.style.opacity = heroFade;
   const tIntro = elapsed - heroT0 - HERO_INTRO_DELAY_S;
   if (heroTyping) {
     heroChars.forEach((el, i) => {
@@ -6401,7 +6430,7 @@ const META = {
         title: 'wwwx.red — 紅品牌策略',
         desc: '紅品牌策略 wwwx.red：把散落的訊息收斂成一個講得清楚的品牌核心，'
             + '再讓它在市場的雜訊裡站得住。' },
-  en: { lang: 'en', shape: 'Brandx RED',
+  en: { lang: 'en', shape: 'BRAND x RED',
         title: 'wwwx.red — Brandx RED Strategy',
         desc: 'Brandx RED Strategy: we collapse scattered messages into one brand '
             + 'core, then make it hold up out in the noise.' },
