@@ -56,9 +56,9 @@
   **第 2、3 段是分段的**；第 4 段兩者都不是，它是**計時的**：
   `.copy--low` 是 `position: fixed`，`top` 由 JS 每次 resize 重算（`placeBrandCopy`）：那句話釘在**文字形狀的可見下緣**下方 `TEXT_GAP_PX`（45px），信箱與地址（`.tail`）再往下 135px，之後不留任何空間。位置綁形狀而不是綁畫面百分比，是因為形狀大小跟著視窗高度走（fov 是垂直的），用百分比釘的話換個視窗比例間距就跑掉
   形狀的可見下緣：幾何下緣 = `vh/2 − SHAPE_OFFSET.y·k − uTextLift·k + |烘焙最低點|·uScale·uTextFit·k`，再乘 `TEXT_EDGE`（1.82）——粒子有點大小、還有打散與揮散，看得見的邊比幾何邊低。實測 901px 高的視窗上幾何 364px、看得見 406px。粒子每格在動，量到的邊會在 ±20px 內浮動
-  `placeBrandCopy` 裡不能用 `DEG`：它宣告在更後面，初始化時呼叫會踩到 TDZ（`Cannot access 'DEG' before initialization`），起算點是「粒子把那五個字寫完的那一瞬間」，而那一刻就是**捲到底**（見下）。那句話不等（`BRAND_DELAY_S = 0`），收斂完成就開始淡 `BRAND_FADE_S`（3 秒）；信箱與地址（`.tail`）從同一個起點等 `BRAND_TAIL_DELAY_S`（0.5 秒）後淡 `BRAND_TAIL_FADE_S`（3 秒）——兩條差 0.5 秒平行跑。容器扛的是那句話的透明度，所以 `.tail` 拿到的是**相對值** `tailFade / brandFade`，乘回去剛好是它自己的曲線。
+  `placeBrandCopy` 裡不能用 `DEG`：它宣告在更後面，初始化時呼叫會踩到 TDZ（`Cannot access 'DEG' before initialization`），起算點是「粒子把那五個字寫完的那一瞬間」，而那一刻就是**捲到底**（見下）。那句話不等（`BRAND_DELAY_S = 0`），收斂完成就開始淡 `BRAND_FADE_S`（3 秒）；信箱與地址（`.tail`）從同一個起點等 `BRAND_TAIL_DELAY_S`（1 秒）後淡 `BRAND_TAIL_FADE_S`（3 秒）——兩條差 1 秒平行跑。容器扛的是那句話的透明度，所以 `.tail` 拿到的是**相對值** `tailFade / brandFade`，乘回去剛好是它自己的曲線。
   這一段**不讓粒子讓位**（`dim = 0`）：整頁的終點就是那五個字最亮的那一格，壓暗 45% 會讓終點反而比過程暗。可讀性靠文字底下的柔光罩，位置也錯開了（字在中線以上、內文在中線以下）。
-  判斷條件是 `activeSection === #brand && smoothProgress > 0.995`，**兩個都要**：第 2 段的收斂進度也會到 1。條件不成立就把計時歸零，離開等於直接淡掉。
+  判斷條件是 `activeSection === #brand && smoothProgress > 0.98`，**兩個都要**：第 2 段的收斂進度也會到 1。條件不成立就把計時歸零，離開等於直接淡掉。
   算在 tick 裡而不是 `readScroll`：計時淡入要每格更新，`readScroll` 只在捲動時跑。另外 `copyEls` 迴圈會跳過它——`transform` 被拿去水平置中了，寫 `translateY` 會蓋掉。
 - **標題逐字收斂**：第 3 段再掛 `data-title-fx="converge"`，標題會被 `splitTitle()` 拆成一個字一個 `<span class="ch">`，每個字從自己的方向飛回定位（`TITLE_SPREAD` 起始距離、`TITLE_STAGGER` 出發延遲）。方向、距離、延遲全由「第幾個字」推導（黃金角＋兩個無理數取小數），**不用 `Math.random`**——重整才會一樣，除錯對得起來。
   拆字會跳過 `<br>` 和 `<em>`，只包文字節點裡的字；空白照原樣留著（包起來會多出可換行節點，標題斷行會亂）。`.ch` 必須是 `inline-block`，inline 元素吃不到 transform。
@@ -109,7 +109,7 @@
 
 兩件事要一起做才有用。只改終點的話，`easeSegment`（sin，先快後慢）會讓最後 20% 的捲動只換到 4% 的進度——形狀早就看起來完成了，人卻還要再捲半個視窗才等到內文。改成線性之後，看得見的變化一路演到最底那一格：實測離底 700px 進度 0.858、200px 0.963、0px 1.000（改之前同樣位置是 0.961／0.997／1.000）。
 
-代價是捲到底之後還有約 0.6 秒，`smoothProgress` 才追上 0.995 觸發內文——那是進度平滑本身的時間，讀起來像一個停頓，不是延遲。
+代價是捲到底之後還有約 0.6 秒，`smoothProgress` 才追上 0.98 觸發內文——那是進度平滑本身的時間，讀起來像一個停頓，不是延遲。
 
 `#brand` 的下留白（25svh）現在只是這段變形跑道的一部分，不再單獨決定內文看不看得見。
 
@@ -119,6 +119,8 @@
 
 **淺底用的標準色是 `#C00C1C`**（2026-08-21 訂）。`public/` 底下淺底版的字標與 favicon
 都是這一支。
+
+⚠️ **`public/` 改了，網站不會自動跟著變。** worker 只 import `website/index.html`，`public/` 根本不在部署路徑上；內嵌的字標是當初一次貼進去的。改完那邊要手動把 path 貼回 `index.html` 的 `#nav .logo` 那段。
 
 **深底維持原本那一組，一個字都沒動**（使用者指定）：字標與頁面上的紅是 `#FF2233`，
 深色分頁列的 favicon 是 `#FC1016`。這不只是慣例——`#C00C1C` 在 `#05070c` 上只有 3.18:1，
@@ -159,7 +161,7 @@
 | 用途 | 字型 |
 |-|-|
 | 頁面的英數 | **Poppins** 400（Google Fonts） |
-| 頁面的中文 | Noto Sans TC，由 `font-family: Inter, "Noto Sans TC"` 逐字回退接住 |
+| 頁面的中文 | Noto Sans TC，由 `font-family: Poppins, "Noto Sans TC"` 逐字回退接住 |
 | 粒子寫的字 | 面板下拉決定，預設 Noto Sans TC 700（中英共用） |
 
 **英數不能交給 `system-ui`**：那在 Windows 是 Segoe UI、Mac 是 SF Pro、Android 是
@@ -210,7 +212,7 @@ ascender/descender 的正中間），所以換過去數值沒動。
 - **換完字一定要重拆、重建**：`heroChars`、`stageParts` 存的是節點參照，`innerHTML`
   一換就全部指向已經不在文件裡的節點——標題從此不再淡入，**而且不會報錯**。
   所以 `setLang` 最後會重跑 `splitChars` 和 `buildStageParts()`。
-- **粒子寫的那幾個字也換**（中文「紅品牌策略」／英文「Brandx RED」）。點雲是掃描畫布
+- **粒子寫的那幾個字也換**（中文「紅品牌策略」／英文「brand xRED」）。點雲是掃描畫布
   來的，換字等於九萬顆重算一次（`rebakeText`，約一兩百毫秒）。烘好之後 `loadBake`
   會順手把 `textLowY` 清掉並重跑 `placeBrandCopy()`——最後一段的內文是貼著文字形狀的
   可見下緣放的，字變了下緣就變（實測 1280×900：中文 top 450px、英文 426px）。

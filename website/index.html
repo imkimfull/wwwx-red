@@ -343,6 +343,8 @@
      右邊是「設定」，靠間距把兩件事分開。9px 是 gap，所以只補 21px。 */
   #nav .tools .play { margin-right: 21px; }
   /* 深淺切換鍵：DOM 留著，先不顯示（淺底色版本已取消，見色票那段的註解）。
+     **注意它現在按了不會有任何反應** —— applyTheme 那一整段已經隨淺底版
+     刪掉了。要復活得先把備份裡的 JS 搬回來，不是把這條 display 拿掉就好。
      選擇器要寫成 `#nav #themeBtn`：`#themeBtn`（0,1,0,0）比不過下面的
      `#nav .icon`（0,1,1,0），寫成單一 id 的話 display: inline-flex 會贏。 */
   #nav #themeBtn { display: none; }
@@ -624,8 +626,8 @@
 
      這兩段的可讀性改成完全交給 contentDim（內文亮著時整片粒子降到 55%）——
      那一道是**全畫面等比壓暗**，不會留下任何邊。
-     第 4 段的 .copy--low 仍然留著罩子：那一段的內文壓在粒子寫的字上，
-     字本身就是要讀的主體，只靠整片壓暗吃不住。 */
+     第 4 段連 contentDim 都不用（dim = 0，終點就是要那幾個字最亮），
+     它靠的是位置錯開 + 白字本來就比粒子亮。**全站沒有任何柔光罩在作用。** */
   .copy::before, .copy--low::before { display: none; }
   /* 這一段的內文比別段大一級。理由是內容量：只有兩句話，撐得起 19px；
      第 3、4 段是整段敘述，同樣的字級會太重。**標題不動**。
@@ -1058,7 +1060,7 @@
          位置互相打架。內文往下讓開（見 .copy--low），把中間讓給那五個字。 -->
     <div class="copy copy--low">
       <p class="lead"
-         data-en="Converge the core. Spread the idea. Brandx RED Strategy.">收斂核心、擴散理念。紅品牌策略。</p>
+         data-en="Converge the core. Spread the idea. brand xRED Strategy.">收斂核心、擴散理念。紅品牌策略。</p>
       <!-- 這兩行不跟著那句話走，而是置中在它下方剩下的空間裡（見 .tail） -->
       <div class="tail">
         <p class="contact"><a href="mailto:hello@wwwx.red">hello@wwwx.red</a></p>
@@ -6371,8 +6373,9 @@ function tick() {
     brandTail.style.opacity = brandFade > 0.001 ? tailFade / brandFade : 0;
   }
   /* **最後一段不讓位**：整頁的終點就是粒子把那五個字寫完、最亮的那一格，
-     壓暗 45% 會讓終點反而比過程暗。這一段的可讀性交給文字底下的柔光罩，
-     位置也錯開了（字在中線以上、內文在中線以下）。 */
+     壓暗 45% 會讓終點反而比過程暗。**這一段完全不靠柔光罩**（全站的罩子
+     都關掉了，見 .copy::before），靠的是位置錯開：字在中線以上、
+     內文在中線以下，加上白字本來就比粒子亮。 */
   if (brandIdx >= 0 && copyState[brandIdx]) copyState[brandIdx].dim = 0;
 
   /* 內文：一般的段落淡入同時往上推 30px（靜止淡入會顯得沒有重量）；
@@ -6469,8 +6472,8 @@ const META = {
         desc: '紅品牌策略 wwwx.red：把散落的訊息收斂成一個講得清楚的品牌核心，'
             + '再讓它在市場的雜訊裡站得住。' },
   en: { lang: 'en', shape: 'BRAND xRED',
-        title: 'wwwx.red — Brandx RED Strategy',
-        desc: 'Brandx RED Strategy: we collapse scattered messages into one brand '
+        title: 'wwwx.red — brand xRED Strategy',
+        desc: 'brand xRED Strategy: we collapse scattered messages into one brand '
             + 'core, then make it hold up out in the noise.' },
 };
 const descEl = document.querySelector('meta[name="description"]');
