@@ -339,14 +339,20 @@
     pointer-events: none;
   }
   #dots .dot {
-    position: relative; width: 7px; height: 7px; border-radius: 999px;
-    background: #8e93a6; opacity: 0.22; border: 0; padding: 0;
+    position: relative; width: 7px; height: 7px;
+    background: none; border: 0; padding: 0;
     cursor: pointer; pointer-events: auto;
+  }
+  /* 圓畫在 ::before：放大的是它，不是整顆 button */
+  #dots .dot::before {
+    content: ''; position: absolute; inset: 0; border-radius: 999px;
+    background: #8e93a6; opacity: 0.22;
     transition: transform .35s ease, opacity .35s ease;
   }
+  /* 命中框。不影響排版，所以撐多大都不會動到圓點之間的距離 */
   #dots .dot::after { content: ''; position: absolute; inset: -9px; }
-  #dots .dot:hover { opacity: 0.5; }
-  #dots .dot.on { transform: scale(1.7); opacity: 0.6; background: #fff; }
+  #dots .dot:hover::before { opacity: 0.5; }
+  #dots .dot.on::before { transform: scale(1.7); opacity: 0.6; background: #fff; }
   /* 播放中：整顆鈕（框線和三角形一起）慢慢閃 —— 只閃圖形的話，
      框還亮著會看起來像圖形壞掉。
      顏色同時轉成品牌那支鮮紅 —— 這是全站唯一一處**暫時性**的紅，
@@ -456,6 +462,8 @@
     display: flex; flex-direction: column; align-items: center; gap: 14px;
     color: #8a6d71; font-size: 12px; letter-spacing: 0.2em;
   }
+  /* 拉丁字母本來就有字腔，中文那一檔的字距套上去會散開 */
+  html[lang="en"] .hint { letter-spacing: 0.08em; }
   /* 只有符號在呼吸，文字不動 —— 兩個一起晃會像整塊在抖。 */
   .hint svg { width: 34px; height: 12px; display: block;
               animation: bob 2.4s ease-in-out infinite; }
@@ -647,7 +655,13 @@
   /* ---- RWD ---- */
   /* 斷點只設一個。分成兩個的話，導覽列和面板會在不同寬度各自變形，
      中間那一段的排版誰都沒實際看過 —— 一個斷點只有兩種版面要驗。 */
+  /* 手機：命中框 32px（7 + 12.5×2）。點距跟著拉到 35px，
+     命中框之間才留得下 3px，不會互相搶。
+     這一條和「導覽列藏起章節連結」同一個斷點 —— 連結一藏，
+     圓點就是唯一的章節入口，25px 的命中框在手指上太小。 */
   @media (max-width: 720px) {
+    #dots { gap: 28px; }
+    #dots .dot::after { inset: -12.5px; }
     /* 導覽列的中間四個連結是**整頁版面寬度的下限**：
        七個項目的文字寬 396px + 六個 26px 間距 156px + 內距 48px = 600px，
        而它們都是不能換行、不能壓縮的文字。#nav 是 fixed，
@@ -902,7 +916,7 @@
            aria-pressed 同時是 CSS 的狀態來源，也是語言的真實狀態 ——
            true = 中文（滑塊在右邊的「中」）。深淺那顆還沒接功能。 -->
       <button class="switch switch--lang" type="button"
-              aria-label="切換英文／中文" data-en-label="Switch language"
+              aria-label="切換為 English" data-en-label="Switch to Chinese"
               aria-pressed="true">
         <span class="opt opt--l">EN</span>
         <span class="opt opt--r">中</span>
@@ -1003,12 +1017,12 @@
          位置互相打架。內文往下讓開（見 .copy--low），把中間讓給那五個字。 -->
     <div class="copy copy--low">
       <p class="lead"
-         data-en="Converge the core. Spread the idea. RED Brand Strategy.">收斂核心、擴散理念。紅品牌策略。</p>
+         data-en="Converge the core. Spread the idea. Brandx RED Strategy.">收斂核心、擴散理念。紅品牌策略。</p>
       <!-- 這兩行不跟著那句話走，而是置中在它下方剩下的空間裡（見 .tail） -->
       <div class="tail">
         <p class="contact"><a href="mailto:hello@wwwx.red">hello@wwwx.red</a></p>
         <p class="addr"
-           data-en="RED Brand Strategy Co., Ltd.<br>2F-1, No. 54, Sec. 3, Zhongxiao E. Rd., Da'an Dist., Taipei">紅品牌策略股份有限公司<br>臺北市大安區忠孝東路3段54號2樓之1</p>
+           data-en="brand xRED CORP.<br>2F-1, No. 54, Sec. 3, Zhongxiao E. Rd., Da'an Dist., Taipei">紅品牌策略股份有限公司<br>臺北市大安區忠孝東路3段54號2樓之1</p>
       </div>
     </div>
   </section>
@@ -4892,6 +4906,7 @@ function markShapeUI(id, loading) {
 
 async function setShape(id, force) {
   if (!force && (id === wantShape)) return;
+  const gen = bakeGen;   // 換字會讓它 +1，見下面 await 之後那道守衛
   wantShape = id;
   const def = SHAPES.find((s) => s.id === id);
   const baked = !!(def && def.src);
@@ -4902,6 +4917,9 @@ async function setShape(id, force) {
     try { arr = await loadBake(def); }
     catch (e) { bakeMsg.textContent = '模型載入失敗'; console.error(e); return; }
     if (wantShape !== id) return;       // 還在載的時候使用者又換走了
+    /* 形狀沒變但**內容**變了（換語言重烘）。wantShape 攔不到這種，
+       舊的那支晚一步回來會把上一個語言的字寫進貼圖。 */
+    if (gen !== bakeGen) return;
   }
   if (id === currentShape && !force) { markShapeUI(id, false); return; }
 
@@ -6380,9 +6398,9 @@ const META = {
         title: 'wwwx.red — 紅品牌策略',
         desc: '紅品牌策略 wwwx.red：把散落的訊息收斂成一個講得清楚的品牌核心，'
             + '再讓它在市場的雜訊裡站得住。' },
-  en: { lang: 'en', shape: 'RED BRAND',
-        title: 'wwwx.red — RED Brand Strategy',
-        desc: 'RED Brand Strategy: we collapse scattered messages into one brand '
+  en: { lang: 'en', shape: 'Brandx RED',
+        title: 'wwwx.red — Brandx RED Strategy',
+        desc: 'Brandx RED Strategy: we collapse scattered messages into one brand '
             + 'core, then make it hold up out in the noise.' },
 };
 const descEl = document.querySelector('meta[name="description"]');
@@ -6413,13 +6431,43 @@ function setLang(next) {
 
   // 粒子寫的字是掃描畫布來的，換字等於整片點雲重算（九萬顆，約一兩百毫秒）
   if (textInput.value !== m.shape) { textInput.value = m.shape; rebakeText(); }
-  try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
 }
 
-langBtn.addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'));
-/* 記住上次選的。讀不到（無痕、擋 storage）就維持中文，不去猜瀏覽器語言 ——
-   猜錯的代價是一進來就是錯的語言，比自己按一下嚴重得多。 */
-try { if (localStorage.getItem(LANG_KEY) === 'en') setLang('en'); } catch (e) {}
+/* **只有自己按過才存**。開頁猜出來的那一次不存 —— 存了的話，之後他在
+   瀏覽器裡改了語言偏好，這一頁還是會固執地維持當初猜到的那個。 */
+langBtn.addEventListener('click', () => {
+  setLang(lang === 'zh' ? 'en' : 'zh');
+  try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+  /* 換完就回首頁，和點字標一樣（playChapter(0)）：整份文案都換了，
+     留在半路等於從一段沒頭沒尾的新文字看起；而且大標題是新語言的，
+     要從頭逐字走一次才看得到。**這一段只掛在點擊上**，不放進 setLang ——
+     開頁猜語言時也會呼叫 setLang，放進去的話一載入就會多播一次開場。 */
+  playChapter(0);
+});
+/* 開頁要用哪一種語言，兩層：**自己選過的最大**，其次才看瀏覽器。
+
+   瀏覽器那一層照 navigator.languages 的**順序**掃，遇到第一個看得懂的就算數 ——
+   那串是使用者自己在瀏覽器裡排的偏好順序（例如 ['ja','en-US','zh-TW'] 代表
+   日文優先、其次英文），所以「先遇到英文就給英文」才是照他的意思，
+   而不是「只要清單裡有中文就給中文」。
+
+   兩種都沒有（純日文、韓文、德文…）落到英文：那是國際訪客，英文的命中率高。
+   navigator.languages 在很舊的瀏覽器沒有，補一個 navigator.language 當後備。 */
+function guessLang() {
+  const list = navigator.languages && navigator.languages.length
+             ? navigator.languages : [navigator.language || ''];
+  for (const tag of list) {
+    const t = String(tag).toLowerCase();
+    if (t === 'zh' || t.startsWith('zh-')) return 'zh';
+    if (t === 'en' || t.startsWith('en-')) return 'en';
+  }
+  return 'en';
+}
+let firstLang = null;
+// 讀不到 storage（無痕、擋 cookie）就當沒選過，往下掉到瀏覽器那一層
+try { firstLang = localStorage.getItem(LANG_KEY); } catch (e) {}
+if (firstLang !== 'zh' && firstLang !== 'en') firstLang = guessLang();
+setLang(firstLang);
 
 /* 預先烘好各 section 會用到的形狀。不預載的話，第一次捲到那一段才開始下載，
    畫面會停在上一個形狀等個幾百毫秒 —— 使用者只會覺得「卡住了」 */
