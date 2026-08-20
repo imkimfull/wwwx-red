@@ -334,14 +334,14 @@
      不能讓四顆點在中線上挖四個洞。 */
   #dots {
     position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
-    z-index: 15; display: flex; flex-direction: column; gap: 14px;
+    z-index: 15; display: flex; flex-direction: column; gap: 20px;
     pointer-events: none;
   }
   #dots i {
     width: 7px; height: 7px; border-radius: 999px; background: #8e93a6;
-    opacity: 0.4; transition: transform .35s ease, opacity .35s ease;
+    opacity: 0.22; transition: transform .35s ease, opacity .35s ease;
   }
-  #dots i.on { transform: scale(1.7); opacity: 1; background: #fff; }
+  #dots i.on { transform: scale(1.7); opacity: 0.6; background: #fff; }
   /* 播放中：整顆鈕（框線和三角形一起）慢慢閃 —— 只閃圖形的話，
      框還亮著會看起來像圖形壞掉。
      顏色同時轉成品牌那支鮮紅 —— 這是全站唯一一處**暫時性**的紅，
