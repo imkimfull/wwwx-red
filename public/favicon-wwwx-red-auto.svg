@@ -2,10 +2,10 @@
   <title>wwwx.red favicon - automatic color scheme</title>
   <style>
     .mark-w { stroke: #202124; }
-    .mark-arrow { stroke: #BB0916; }
+    .mark-arrow { stroke: #C00C1C; }
     @media (prefers-color-scheme: dark) {
       .mark-w { stroke: #F7F5F2; }
-      .mark-arrow { stroke: #FC1016; }
+      .mark-arrow { stroke: #C00C1C; }
     }
   </style>
   <path class="mark-w" d="M72 160H114L161 346L222 207L279 339L312 251" fill="none" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
