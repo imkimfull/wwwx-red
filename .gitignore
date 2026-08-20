@@ -1,0 +1,14 @@
+# 另一個 repo 的工作副本（imkimfull/wwwx-red，只放 logo 與 favicon）。
+# 它自己有 .git，收進來會變成 gitlink，兩邊都不好維護。
+github-wwwx-red/
+
+# 建置與工具產生的東西
+.wrangler/
+node_modules/
+__pycache__/
+*.pyc
+
+# 系統雜物
+Thumbs.db
+desktop.ini
+.DS_Store

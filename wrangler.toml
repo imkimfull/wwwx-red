@@ -1,0 +1,39 @@
+name = "wwwx-red"
+main = "worker/index.js"
+compatibility_date = "2026-08-20"
+
+# 用「路徑 route」而不是 custom domain：custom domain 會把整個主機名綁死在
+# 一個 worker 上，之後要在同一個網域掛別的東西（部落格、後台、API）就得先
+# 把它拆掉。route 可以讓多個各自獨立的 worker 共用一個主機名，各管各的路徑。
+#
+# **前提：wwwx.red 與 www.wwwx.red 各要有一筆「已代理」（橘色雲）的 DNS 記錄**，
+# route 才會被觸發。沒有記錄的話請求根本到不了 Cloudflare 的邊緣，route 寫得
+# 再正確也不會生效。慣例是 A → 192.0.2.1（RFC 5737 的文件保留位址，不會路由
+# 到任何真實主機）：萬一 route 沒對上，請求會直接失敗，而不是安靜地掉到別處。
+#
+# 兩條 route 是實測出來的規則：
+#   1. `*` 是「一個以上」不是「零個以上」。只寫 wwwx.red/* 的話，光禿禿的
+#      wwwx.red（連斜線都沒有）對不上。所以要另外補一條精確的。
+#   2. 模式裡**不能有查詢字串**，Cloudflare API 會直接退件（code 10022）。
+#      查詢字串在比對之前就被去掉了，所以 ?v=1 是拿路徑去比對，不必也不能
+#      為它多寫一條。
+#
+# route 改完到全球生效要幾十秒，中間量到的結果會自相矛盾。等一下再驗。
+[[routes]]
+pattern = "wwwx.red/*"
+zone_name = "wwwx.red"
+
+[[routes]]
+pattern = "wwwx.red"
+zone_name = "wwwx.red"
+
+[[routes]]
+pattern = "www.wwwx.red/*"
+zone_name = "wwwx.red"
+
+[[routes]]
+pattern = "www.wwwx.red"
+zone_name = "wwwx.red"
+
+[observability]
+enabled = true

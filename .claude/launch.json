@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wwwx-red-website",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "website", "-l", "3210"],
+      "port": 3210
+    }
+  ]
+}
