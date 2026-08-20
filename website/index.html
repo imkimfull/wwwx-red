@@ -329,19 +329,24 @@
   }
   #nav .icon:hover { background: rgba(255, 255, 255, 0.08); color: #dfe6ff; }
   /* ── 右側的段落指示 ────────────────────────────────
-     四個畫面四顆點，目前那一顆放大並轉白。點是**看**的不是**按**的，
-     所以 pointer-events: none —— 底下整片畫布可以拖著轉形狀，
-     不能讓四顆點在中線上挖四個洞。 */
+     四個畫面四顆點，目前那一顆放大並轉白。點**可以按**（跳到那一章），
+     但容器維持 pointer-events: none —— 底下整片畫布要能拖著轉形狀，
+     只有點自己收事件。點擊範圍用 ::after 往外撐 9px：7px 的目標太小，
+     但撐的是偽元素，不影響排版，看得見的還是 7px。 */
   #dots {
     position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
     z-index: 15; display: flex; flex-direction: column; gap: 20px;
     pointer-events: none;
   }
-  #dots i {
-    width: 7px; height: 7px; border-radius: 999px; background: #8e93a6;
-    opacity: 0.22; transition: transform .35s ease, opacity .35s ease;
+  #dots .dot {
+    position: relative; width: 7px; height: 7px; border-radius: 999px;
+    background: #8e93a6; opacity: 0.22; border: 0; padding: 0;
+    cursor: pointer; pointer-events: auto;
+    transition: transform .35s ease, opacity .35s ease;
   }
-  #dots i.on { transform: scale(1.7); opacity: 0.6; background: #fff; }
+  #dots .dot::after { content: ''; position: absolute; inset: -9px; }
+  #dots .dot:hover { opacity: 0.5; }
+  #dots .dot.on { transform: scale(1.7); opacity: 0.6; background: #fff; }
   /* 播放中：整顆鈕（框線和三角形一起）慢慢閃 —— 只閃圖形的話，
      框還亮著會看起來像圖形壞掉。
      顏色同時轉成品牌那支鮮紅 —— 這是全站唯一一處**暫時性**的紅，
@@ -865,7 +870,8 @@
 
 <nav id="nav">
   <div class="bar">
-    <a class="logo" href="#top" aria-label="wwwx.red 首頁"><svg aria-hidden="true" viewBox="0 0 900 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <a class="logo" href="#top" aria-label="wwwx.red 首頁"
+       data-en-label="wwwx.red home"><svg aria-hidden="true" viewBox="0 0 900 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M395.211 0C405.647 0.000151847 413.692 6.87694 417.877 15.656L418.073 16.0762L418.175 16.3035L442.37 71.8755L461.8 25.9509L461.839 25.86C465.772 16.7674 473.782 8.97954 484.815 8.97954C495.676 8.97956 503.608 16.5256 507.605 25.4343L507.792 25.86L507.89 26.0928L526.59 71.8716C526.725 71.5737 526.87 71.2809 527.027 70.9944L555.997 18.2185C556.001 18.2115 556.005 18.2045 556.009 18.1974C560.316 10.3872 567.107 4.20648 576.124 2.50847C584.84 0.86734 593.02 3.90934 599.408 9.02657L600.021 9.52827L600.224 9.70229L641.321 45.6189C646.518 50.1607 647.021 58.0232 642.443 63.1797C637.866 68.3362 629.942 68.8346 624.745 64.2929L583.804 28.5103C582.69 27.5873 581.852 27.2028 581.38 27.0531C581.145 26.9784 580.993 26.9588 580.918 26.9535C580.846 26.9485 580.812 26.9543 580.8 26.9566C580.787 26.9591 580.742 26.9682 580.656 27.0092C580.566 27.0517 580.398 27.1447 580.161 27.3368C579.679 27.7267 578.887 28.5518 578.009 30.1424L578.009 30.1416L549.294 82.4518C545.273 91.2844 537.376 98.7334 526.586 98.7334C515.553 98.7333 507.542 90.9454 503.609 81.8529C503.576 81.7755 503.543 81.6974 503.511 81.6193L484.812 35.8445L465.386 81.762C465.373 81.7923 465.361 81.8228 465.348 81.8529C461.415 90.9454 453.404 98.7334 442.371 98.7334C431.338 98.7334 423.328 90.9454 419.395 81.8529V81.8521L395.221 26.328C395.218 26.3211 395.214 26.3144 395.21 26.3076C395.196 26.338 395.181 26.3687 395.167 26.4001L369.601 82.0285C365.641 91.045 357.665 98.7332 346.704 98.7334C335.67 98.7334 327.66 90.9454 323.727 81.8529C323.714 81.8228 323.701 81.7922 323.689 81.762L304.258 35.8366L284.117 81.8521C280.184 90.9447 272.174 98.7333 261.141 98.7334C250.108 98.7334 242.098 90.9454 238.165 81.8529V81.8521L213.991 26.328C213.988 26.3211 213.984 26.3144 213.981 26.3076C213.966 26.338 213.952 26.3687 213.937 26.4001C213.92 26.4374 213.902 26.475 213.885 26.5122L187.663 82.1077C183.692 91.0902 175.729 98.7333 164.8 98.7334C153.767 98.7334 145.756 90.9454 141.823 81.8529C141.79 81.7755 141.757 81.6974 141.725 81.6193L123.025 35.8405C123.022 35.8473 123.019 35.8542 123.016 35.8609L102.267 81.7353C98.6937 90.8051 90.9155 98.7333 79.9113 98.7334C68.739 98.7334 60.8901 90.5619 57.3923 81.3199C57.3785 81.2832 57.3648 81.2461 57.3513 81.2094L41.2552 37.4279C40.1158 34.5984 39.2064 32.4605 38.3345 30.7374C37.4509 28.9912 36.8167 28.1026 36.4147 27.652C36.2345 27.45 36.1283 27.3678 36.0979 27.3455C36.074 27.3278 36.0628 27.3212 36.0347 27.3094C35.9986 27.2942 35.4982 27.0829 34.0984 27.0828H12.5393C5.61404 27.0828 0 21.5124 0 14.6408C8.58977e-05 7.76938 5.6141 2.19883 12.5393 2.19883H34.0984C42.6648 2.19885 49.7733 5.08275 55.1937 11.1588C59.104 15.5421 61.6856 21.2081 63.7521 26.2417L64.6092 28.3551L64.742 28.7016L79.9982 70.1972L100.116 25.7157C104.071 16.6853 112.055 8.97954 123.029 8.97954C133.89 8.97972 141.821 16.5258 145.818 25.4343L146.005 25.86L146.103 26.0928L164.804 71.8724C164.834 71.8053 164.864 71.7382 164.895 71.6717L191.171 15.9641C195.313 7.03856 203.423 0.000153605 213.981 0C224.417 0 232.462 6.87683 236.647 15.656L236.843 16.0762L236.945 16.3035L261.141 71.8786L281.304 25.8106C285.245 16.7392 293.246 8.97954 304.259 8.97954C315.12 8.97967 323.051 16.5257 327.048 25.4343L327.235 25.86L327.274 25.9509L346.705 71.8771C346.719 71.846 346.733 71.8148 346.747 71.7838L372.349 16.0762C376.475 7.09751 384.609 0 395.211 0Z" fill="#F7F5F2"/>
 <path d="M655.942 14.0562C660.783 9.14176 668.722 9.05121 673.675 13.8539C678.627 18.6566 678.718 26.5334 673.878 31.4477L650.528 55.1543L673.878 78.8617C678.719 83.7761 678.627 91.6535 673.675 96.4563C668.722 101.259 660.783 101.168 655.942 96.254L624.028 63.8509C619.267 59.0161 619.267 51.2933 624.028 46.4586L655.942 14.0562Z" fill="#FF2233"/>
 <path d="M696.625 69.8836C704.823 69.8836 711.468 63.2894 711.468 55.155C711.468 47.0206 704.823 40.4264 696.625 40.4264C688.427 40.4264 681.781 47.0206 681.781 55.155C681.781 63.2894 688.427 69.8836 696.625 69.8836Z" fill="#FF2233"/>
@@ -873,13 +879,17 @@
 <path d="M838.706 30.3454H813.574V45.8697H835.618V64.9223H813.574V79.93H838.706V99.0242H792.684V11.2505H838.706V30.3454Z" fill="#FF2233"/>
 <path fill-rule="evenodd" clip-rule="evenodd" d="M876.788 11.2505C883.655 11.2505 889.449 12.9472 893.71 16.7738C898.018 20.6433 900 26.007 900 32.3937V77.8809C900 82.0978 899.117 85.909 897.199 89.1784C895.276 92.4549 892.486 94.9331 888.942 96.6019C885.415 98.2626 881.306 99.0241 876.727 99.0242H850.273V11.2505H876.788ZM888.617 93.1567C888.273 93.3475 887.919 93.5298 887.554 93.7015L888.107 93.4295C888.279 93.3411 888.449 93.2497 888.617 93.1567ZM894.949 86.5406C894.779 86.8897 894.596 87.2312 894.401 87.5636L894.688 87.0541C894.778 86.8852 894.865 86.7136 894.949 86.5406ZM871.163 30.1769V80.0978H875.723C877.193 80.0977 877.852 79.7083 878.201 79.3515C878.582 78.9609 878.971 78.2506 878.971 76.7764V33.4983C878.971 31.9798 878.574 31.2795 878.215 30.9161C877.868 30.5658 877.204 30.177 875.723 30.1769H871.163ZM896.759 31.863C896.762 32.0386 896.763 32.2157 896.763 32.3937L896.759 31.863Z" fill="#FF2233"/>
 </svg></a>
-    <a href="#core">核心</a>
-    <a href="#noise">擴散</a>
-    <a href="#brand">聯絡</a>
+    <!-- data-en 是英文版的內容，中文就是元素現在的樣子（見 setLang）。
+         data-en-label 走另一條路：這幾個元素裡面裝的是 SVG，換 innerHTML
+         會把圖示一起換掉，所以它們只換 aria-label。 -->
+    <a href="#core" data-en="Core">核心</a>
+    <a href="#noise" data-en="Reach">擴散</a>
+    <a href="#brand" data-en="Contact">聯絡</a>
     <!-- 從頭播一次。放在左邊那排的最後：它和三個章節連結是同一件事的延伸
          （「全部播一次」），擺到右邊會被讀成設定類的工具。
          三角形取自 lucide 的 play，圓框交給 CSS 畫（見 #nav .icon）。 -->
-    <a class="icon play" href="#top" aria-label="從頭播放一次">
+    <a class="icon play" href="#top" aria-label="從頭播放一次"
+       data-en-label="Play from the top">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="9 6 18 12 9 18 9 6"/>
@@ -887,20 +897,21 @@
     </a>
     <span class="gap"></span>
     <span class="tools">
-      <!-- 以下兩顆是**開關**造型（軌道 + 滑塊），而且**只有外觀**，
-           功能還沒接（使用者指定先不做）。用 <button> 不用 <a>：
+      <!-- 以下兩顆是**開關**造型（軌道 + 滑塊）。用 <button> 不用 <a>：
            導覽列的點擊處理只認 a[href^="#"]，所以它們不會誤觸「播放某一章」。
-           aria-pressed 同時是 CSS 的狀態來源 —— 之後接功能時只要改這個屬性，
-           滑塊和字色都會跟著走，不必再多一組 class。 -->
+           aria-pressed 同時是 CSS 的狀態來源，也是語言的真實狀態 ——
+           true = 中文（滑塊在右邊的「中」）。深淺那顆還沒接功能。 -->
       <button class="switch switch--lang" type="button"
-              aria-label="切換英文／中文" aria-pressed="true">
+              aria-label="切換英文／中文" data-en-label="Switch language"
+              aria-pressed="true">
         <span class="opt opt--l">EN</span>
         <span class="opt opt--r">中</span>
         <span class="knob"></span>
       </button>
       <!-- 深淺維持圓鈕：它是「按一下換一次」的動作，不是兩選一的狀態；
            做成開關的話會和旁邊的語言二選一長得一樣，反而分不清。 -->
-      <button class="icon" type="button" aria-label="深色／淺色切換">
+      <button class="icon" type="button" aria-label="深色／淺色切換"
+              data-en-label="Toggle dark / light">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
@@ -926,11 +937,14 @@
   <section class="sec sec--hero" id="hero"
            data-stop data-converge="0" data-field="7" data-amp="1.0" data-speed="1.0">
     <div class="pin">
-      <h1><span class="dim">讓混沌的訊息</span><span class="lit">收斂成一個品牌</span></h1>
+      <!-- 大標題和兩個分段標題會被 splitChars 拆成一堆 <span class="ch">，
+           拆完就讀不回原文了 —— 所以中文也寫一份在 data-zh 裡（見 setLang）。 -->
+      <h1 data-zh="<span class='dim'>讓混沌的訊息</span><span class='lit'>收斂成一個品牌</span>"
+          data-en="<span class='dim'>Turn the noise</span><span class='lit'>into one brand.</span>"><span class="dim">讓混沌的訊息</span><span class="lit">收斂成一個品牌</span></h1>
       <!-- 符號獨立成一支 SVG 擺在文字下方：一個闊版的 V。
            寬高比 34:12 是刻意的 —— 窄的 V 會被當成「箭頭」，闊的比較像一個手勢。 -->
       <p class="hint">
-        <span>往下捲動</span>
+        <span data-en="Scroll to begin">往下捲動</span>
         <svg viewBox="0 0 34 12" fill="none" aria-hidden="true">
           <path d="M2 2 17 10 32 2" stroke="#8a6d71" stroke-width="1.6"
                 stroke-linecap="round" stroke-linejoin="round"/>
@@ -949,8 +963,12 @@
          釘住的工作交給 CSS，不要用 JS 逐格算位移（會差一幀、看起來一跳一跳）。 -->
     <div class="stage-pin">
       <div class="copy copy--staged">
-        <h2 class="stage-title">第一步不是設計<br>而是 <em>收斂為一顆核心</em></h2>
-        <div class="stage-body">
+        <h2 class="stage-title"
+            data-zh="第一步不是設計<br>而是 <em>收斂為一顆核心</em>"
+            data-en="It never starts with design.<br>It starts with <em>one core</em>."
+            >第一步不是設計<br>而是 <em>收斂為一顆核心</em></h2>
+        <div class="stage-body"
+             data-en="<p>Product, channel, support: one story.</p><p>When the core is clear, every impression adds up.</p>">
           <p>產品、通路、客服，講同一句話。</p>
           <p>核心夠清楚，每一次曝光都在加分。</p>
         </div>
@@ -966,8 +984,12 @@
            data-reveal="staged" data-title-fx="converge">
     <div class="stage-pin">
       <div class="copy copy--staged">
-        <h2 class="stage-title">現場擴散<br>核心 <em>一樣清楚</em></h2>
-        <div class="stage-body">
+        <h2 class="stage-title"
+            data-zh="現場擴散<br>核心 <em>一樣清楚</em>"
+            data-en="Out where it spreads,<br>the core <em>still reads</em>"
+            >現場擴散<br>核心 <em>一樣清楚</em></h2>
+        <div class="stage-body"
+             data-en="<p>Rivals, channels, algorithms: attention shifts daily.</p><p>A steady core is recognized wherever it lands.</p>">
           <p>對手、通路、演算法，注意力每天都在變。</p>
           <p>核心夠穩，走到哪裡都認得出來。</p>
         </div>
@@ -980,11 +1002,13 @@
     <!-- 這一段**沒有 h2**：標題已經由粒子寫在畫面上了，再寫一次會疊在同一個
          位置互相打架。內文往下讓開（見 .copy--low），把中間讓給那五個字。 -->
     <div class="copy copy--low">
-      <p class="lead">收斂核心、擴散理念。紅品牌策略。</p>
+      <p class="lead"
+         data-en="Converge the core. Spread the idea. RED Brand Strategy.">收斂核心、擴散理念。紅品牌策略。</p>
       <!-- 這兩行不跟著那句話走，而是置中在它下方剩下的空間裡（見 .tail） -->
       <div class="tail">
         <p class="contact"><a href="mailto:hello@wwwx.red">hello@wwwx.red</a></p>
-        <p class="addr">紅品牌策略股份有限公司<br>臺北市大安區忠孝東路3段54號2樓之1</p>
+        <p class="addr"
+           data-en="RED Brand Strategy Co., Ltd.<br>2F-1, No. 54, Sec. 3, Zhongxiao E. Rd., Da'an Dist., Taipei">紅品牌策略股份有限公司<br>臺北市大安區忠孝東路3段54號2樓之1</p>
       </div>
     </div>
   </section>
@@ -4220,6 +4244,8 @@ function loadBake(def) {
   const p = sampleText(textInput.value || 'TEAMMAX')
     .then((arr) => {
       if (gen === bakeGen) bakeCache.set(def.id, arr);
+      // 字變了，最後一段內文要重新對齊文字形狀的可見下緣
+      if (gen === bakeGen && def.id === 200) { textLowY = null; placeBrandCopy(); }
       if (bakeBusy.get(def.id) === p) bakeBusy.delete(def.id);
       return arr;
     })
@@ -5630,8 +5656,23 @@ const copyStops = copyEls.map((el) => STOPS.find((st) => st.el.contains(el)) || 
    整排會在切換的時候上下抖一下。 */
 const dotsBox = document.createElement('div');
 dotsBox.id = 'dots';
-dotsBox.setAttribute('aria-hidden', 'true');   // 純指示，讀螢幕的人靠導覽列
-const dots = STOPS.map(() => dotsBox.appendChild(document.createElement('i')));
+/* 點也能按，行為和左上導覽列一樣：跳到那一章的開頭再播那一章。
+   名稱直接抄導覽列的連結文字 —— 同一個地方兩個入口，講法要一致。 */
+const dotLabel = (st) => {
+  const link = document.querySelector('#nav .bar > a[href="#' + st.el.id + '"]');
+  // 首頁在導覽列上是字標不是文字，只好寫死。讀 <html lang> 不讀 lang 變數：
+  // 這個函式在 lang 宣告之前就會被叫一次（建點點的時候），會踩到 TDZ
+  if (!link) return document.documentElement.lang === 'en' ? 'Home' : '首頁';
+  return link.textContent.trim();
+};
+const dots = STOPS.map((st, i) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'dot';
+  b.setAttribute('aria-label', dotLabel(st));
+  b.addEventListener('click', () => playChapter(i));
+  return dotsBox.appendChild(b);
+});
 document.body.appendChild(dotsBox);
 let dotAt = -1;
 function setDot(k) {
@@ -5714,7 +5755,8 @@ function splitTitle(root) {
   });
 }
 // 標題和內文各自的元素。查一次存起來，不要每格 querySelector
-const stageParts = copyEls.map((el, i) => {
+let stageParts;
+const buildStageParts = () => copyEls.map((el, i) => {
   const title = el.querySelector('.stage-title');
   const st = copyStops[i];
   const fx = title && st && st.el.dataset.titleFx === 'converge';
@@ -5725,6 +5767,8 @@ const stageParts = copyEls.map((el, i) => {
     lastE: -1,   // 上一格的標題進度，沒變就不重寫那一排 transform
   };
 });
+
+stageParts = buildStageParts();
 
 // 元素在整份文件裡的位置。offsetTop 累加而不用 getBoundingClientRect，
 // 因為前者忽略 transform，量的是「版面上的位置」而不是「畫面上的位置」
@@ -6104,20 +6148,29 @@ let reveal = 0, elapsed = 0, fpsFrames = 0, fpsLast = performance.now();
    **每個字從頭到尾都在版面上，只是透明度 0**，不是逐字插進 DOM ——
    後者每多一個字整行就要重排一次，中文標題會左右抖。 */
 const HERO_INTRO_DELAY_S = 0.5;
-const HERO_CHAR_STEP = 0.15;   // 每個字比前一個晚多少開始
+let HERO_CHAR_STEP = 0.15;     // 每個字比前一個晚多少開始，由字數回推
 const HERO_CHAR_FADE = 0.70;   // 單獨一個字淡入多久
 const HERO_HINT_FADE_S = 0.8;  // 標題走完之後提示淡進來
-const heroChars = splitChars(document.querySelector('#hero h1'));
+let heroChars = splitChars(document.querySelector('#hero h1'));
 const heroHint  = document.querySelector('.sec--hero .hint');
-// 最後一個字淡完的時刻。13 個字：12 × 0.15 + 0.7 = 2.5 秒
-const HERO_TYPE_END =
-  Math.max(0, heroChars.length - 1) * HERO_CHAR_STEP + HERO_CHAR_FADE;
+/* 逐字走完的總長釘在 HERO_TYPE_TARGET_S，每個字晚多少由字數回推。
+   中文 13 個字算出來剛好是 0.15，換英文（27 個字）才會自己縮短。 */
+const HERO_TYPE_TARGET_S = 2.5;
+let HERO_TYPE_END = 0;   // 最後一個字淡完的時刻
+let HERO_INTRO_S  = 0;   // 逐字整段走完要多久（含開頭的延遲）
+function retimeHero() {
+  const n = Math.max(1, heroChars.length);
+  HERO_CHAR_STEP = Math.min(0.15,
+    (HERO_TYPE_TARGET_S - HERO_CHAR_FADE) / Math.max(1, n - 1));
+  HERO_TYPE_END = (n - 1) * HERO_CHAR_STEP + HERO_CHAR_FADE;
+  HERO_INTRO_S = HERO_INTRO_DELAY_S + HERO_TYPE_END;
+}
+retimeHero();
 let heroTyping = true;   // 走完就不再每格寫那一排透明度
 /* 開場那一段要能**重播**：點 logo 回首頁、按「聯絡我們」從頭播的時候，
    大標題都要再逐字走一次。所以起算時刻改成變數，不再是「載入後第幾秒」——
    重播就是把它挪到現在。 */
 let heroT0 = 0;
-const HERO_INTRO_S = HERO_INTRO_DELAY_S + HERO_TYPE_END;   // 逐字走完要多久
 function replayHeroIntro() { heroT0 = elapsed; heroTyping = true; }
 
 document.addEventListener('visibilitychange', () => { if (!document.hidden) clock.getDelta(); });
@@ -6307,6 +6360,67 @@ window.addEventListener('resize', () => {
   buildGuides();   // 版面用 vh 排的，視窗一變高度全都會跑掉
 });
 
+/* ── 中英切換 ──────────────────────────────────────────────
+   每個要翻的元素身上掛一個 data-en，中文就是它原本的內容。例外是會被
+   splitChars 改寫的三個標題：拆完之後 innerHTML 已經不是原文了，所以
+   它們另外寫一份 data-zh。裝 SVG 的那幾個（字標、播放、兩顆開關）不能
+   換 innerHTML，改用 data-en-label 只換 aria-label。 */
+const LANG_KEY = 'wwwx-lang';
+const I18N = [...document.querySelectorAll('[data-en]')].map((el) => ({
+  el, en: el.dataset.en,
+  zh: el.dataset.zh !== undefined ? el.dataset.zh : el.innerHTML,
+}));
+const I18N_LABEL = [...document.querySelectorAll('[data-en-label]')].map((el) => ({
+  el, en: el.dataset.enLabel, zh: el.getAttribute('aria-label'),
+}));
+/* 換語言連分頁標題、描述、粒子寫的那幾個字一起換。粒子那一串不是裝飾，
+   它是這一頁唯一的大標 —— 留著中文等於英文版沒有標題。 */
+const META = {
+  zh: { lang: 'zh-Hant', shape: '紅品牌策略',
+        title: 'wwwx.red — 紅品牌策略',
+        desc: '紅品牌策略 wwwx.red：把散落的訊息收斂成一個講得清楚的品牌核心，'
+            + '再讓它在市場的雜訊裡站得住。' },
+  en: { lang: 'en', shape: 'RED BRAND',
+        title: 'wwwx.red — RED Brand Strategy',
+        desc: 'RED Brand Strategy: we collapse scattered messages into one brand '
+            + 'core, then make it hold up out in the noise.' },
+};
+const descEl = document.querySelector('meta[name="description"]');
+const langBtn = document.querySelector('.switch--lang');
+let lang = 'zh';
+
+function setLang(next) {
+  if (next === lang) return;
+  lang = next;
+  const en = lang === 'en', m = META[lang];
+  for (const it of I18N) it.el.innerHTML = en ? it.en : it.zh;
+  for (const it of I18N_LABEL) it.el.setAttribute('aria-label', en ? it.en : it.zh);
+  document.documentElement.lang = m.lang;
+  document.title = m.title;
+  if (descEl) descEl.content = m.desc;
+  langBtn.setAttribute('aria-pressed', en ? 'false' : 'true');
+
+  /* 換 innerHTML 是**破壞性**的：原本那些 <span class="ch"> 全沒了，
+     heroChars／stageParts 存的參照會指向已經不在文件裡的節點 —— 標題
+     從此不再淡入，而且不會報錯。所以換完字一定要重拆、重建。 */
+  heroChars = splitChars(document.querySelector('#hero h1'));
+  retimeHero();
+  // 開場已經走完的話，新拆出來的字沒人寫過透明度，要自己補上
+  if (!heroTyping) for (const c of heroChars) c.style.opacity = 1;
+  stageParts = buildStageParts();
+  // 右側的點點借導覽列的字當標籤，換完要重讀一次
+  dots.forEach((b, i) => b.setAttribute('aria-label', dotLabel(STOPS[i])));
+
+  // 粒子寫的字是掃描畫布來的，換字等於整片點雲重算（九萬顆，約一兩百毫秒）
+  if (textInput.value !== m.shape) { textInput.value = m.shape; rebakeText(); }
+  try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+}
+
+langBtn.addEventListener('click', () => setLang(lang === 'zh' ? 'en' : 'zh'));
+/* 記住上次選的。讀不到（無痕、擋 storage）就維持中文，不去猜瀏覽器語言 ——
+   猜錯的代價是一進來就是錯的語言，比自己按一下嚴重得多。 */
+try { if (localStorage.getItem(LANG_KEY) === 'en') setLang('en'); } catch (e) {}
+
 /* 預先烘好各 section 會用到的形狀。不預載的話，第一次捲到那一段才開始下載，
    畫面會停在上一個形狀等個幾百毫秒 —— 使用者只會覺得「卡住了」 */
 STOPS.forEach((st) => {
@@ -6321,7 +6435,7 @@ tick();
 // updateRotation 也掛出來：旋轉是逐幀累積的狀態，要驗「切到文字會不會轉回正面」
 // 就得能一格一格手動推進，光看單一幀的 uSpinAngle 看不出東西
 // overShape / setPointer：滑鼠碰撞判定沒有畫面可看，只能靠餵座標進去問結果
-window.__dbg = { renderer, scene, camera, uniforms, geometry, buildGrid,
+window.__dbg = { setLang, renderer, scene, camera, uniforms, geometry, buildGrid,
                  setShape, SHAPES, bakeCache, sampleText, updateRotation,
                  rollCloud, cloudMetrics, cloudBaseline, cloudProfile, cloudPoint,
                  CLOUD_BASE, rollEgg, eggProfile, rollHelix, helixProfile,
