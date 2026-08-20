@@ -4,7 +4,7 @@
 
 底稿是 `C:\9.VibeCoding\TOOLS-DEV\hero-dust\index.html`（線上版 <https://lab.realvco.com/hero-dust>）。目前這份 `index.html` 是用一支轉換腳本從底稿生出來的（腳本在暫存目錄，**沒有進版控**），所以底稿有更新時可以重跑一次把改良帶進來——2026-08-20 的「文字形狀尺寸上限」就是這樣拿到的。
 
-但腳本不在專案裡，等於這條路隨時會斷。**要嘛把腳本搬進來、要嘛就把這份 `index.html` 當唯一正本直接改**，兩者擇一，不要半吊子——直接改過之後再重跑腳本，改的東西會被蓋掉。
+**這個選擇已經做了：`index.html` 就是唯一正本。** 那支腳本放在 session 專屬的暫存目錄，暫存一清就沒了；2026-08-21 這一輪之後它累積的替換已經超過一百處，而底稿那邊沒有任何東西是這裡需要再拿的。之後要改就直接改 `index.html`，不要再想「重跑腳本把改良帶進來」——那條路已經斷了。
 
 ## 四段的狀態
 
@@ -193,7 +193,7 @@ shader uniform 讀不到 CSS 變數；硬要統一就得開頁 `getComputedStyle
 
 | 用途 | 字型 |
 |-|-|
-| 頁面的英數 | **Inter** 400/500/600（Google Fonts） |
+| 頁面的英數 | **Poppins** 400（Google Fonts） |
 | 頁面的中文 | Noto Sans TC，由 `font-family: Inter, "Noto Sans TC"` 逐字回退接住 |
 | 粒子寫的字 | 面板下拉決定，預設 Noto Sans TC 700（中英共用） |
 
@@ -201,15 +201,21 @@ shader uniform 讀不到 CSS 變數；硬要統一就得開頁 `getComputedStyle
 Roboto —— 英文大標長什麼樣會由訪客的作業系統決定。順序一定是**拉丁在前、中文在後**，
 反過來寫的話 Noto Sans TC 會把英數也接走。
 
-**換字型就要重量語言開關的光學對齊**（見 `#nav .switch--lang .opt`）：那兩個位移是
-針對特定字型量出來的。量法：零寬探針取基線 → 同一支字型放大 20 倍畫進 canvas、
-掃像素取墨水邊界 → 回推 1× 的位移。Inter 11px / Noto Sans TC 10px 這一組量到
-EN `translateX(0.155px)`、中 `translate(0.175px, -0.486px)`，實測墨水中心與滑塊中心
-的誤差 EN 0.010px、中 0.003px。
+**換字型要重量語言開關的光學對齊**（見 `#nav .switch--lang .opt`），但只有**垂直**那一項：
+水平那項本質是 `letter-spacing` 的一半（0.03em × 11px ÷ 2 = 0.165px），和用哪支字型無關。
+量法：零寬探針取基線 → 同一支字型放大 20 倍畫進 canvas、掃像素取墨水邊界 → 回推 1× 的位移。
+現行值是 EN `translateX(0.155px)`、中 `translate(0.175px, -0.486px)`，實測墨水中心與滑塊中心
+的誤差 EN 0.010px、中 0.003px。Poppins 和 Inter 的垂直修正**剛好都是 0**（cap 高度落在
+ascender/descender 的正中間），所以換過去數值沒動。
 
-**還沒做**：`<link>` 目前宣告 6 個家族，那支 CSS 解壓後 975KB（中文家族每個字重被切成
-上百段 unicode-range），實際下載的字型檔只有真的用到的那幾片。要瘦身就得砍掉面板
-「文字形狀」下拉裡的備選字型與字重 —— 那是砍功能，不是純優化，要先決定。
+**首屏只載 Poppins 400 + Noto Sans TC 400/700**（CSS 解壓 975KB → 236KB）。原本一次宣告
+6 個家族，兩個中文家族的每個字重都被切成上百段 unicode-range，光宣告就 975KB，而且擋著
+首次繪製。面板「文字形狀」下拉裡的備選字型與字重**沒有砍掉**，改成第一次真的被選到才補
+一支 `<link>`（`ensurePanelFonts`），並 `await` 它到齊才回去量字寬 —— 不等的話
+`document.fonts.load()` 會因為「沒有這個 face」直接 resolve，點雲就用備援字型烘出來了。
+
+⚠️ 快速路徑的 `BASE_FAMILY` / `BASE_WEIGHTS` 和 `<option selected>` 是**兩處記同一件事**：
+改了下拉的預設值而忘了改這裡，第一次烘焙就會安靜地卡在下載那支 975KB CSS 上。
 
 ## 右側的四個圓點
 
@@ -286,5 +292,4 @@ npx serve website -l 3210
 
 ## 還沒做的事
 
-- 深淺切換那顆按鈕**只有外觀**，功能還沒接。
 - `public/` 的檔案沒有被**外連**——字標和 favicon 都是把內容內嵌進 `index.html`（單檔自足）。所以 `public/` 那幾支改了，這裡不會自動跟著變，要手動同步。

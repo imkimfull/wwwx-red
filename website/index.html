@@ -68,7 +68,7 @@
     --red-ink: #ff2233;   --red-rule: rgba(255, 34, 51, 0.35);
     --knob: #000000;      --knob-ink: #ffffff;  --opt: #8e93a6;
     --dot: #8e93a6;       --dot-op: 0.22;       --dot-on: #ffffff;
-    --dot-on-op: 0.6;     --logo-ink: #f7f5f2;
+    --dot-on-op: 0.6;     --dot-hover-op: 0.5;  --logo-ink: #f7f5f2;
     --scrim: rgba(5, 7, 12, 0.62);
     --scrim-0: rgba(5, 7, 12, 0);
   }
@@ -89,7 +89,8 @@
     --red-ink: #d8121f;   --red-rule: rgba(216, 18, 31, 0.40);
     --knob: #05070c;      --knob-ink: #f7f5f2;  --opt: #6e5f63;
     --dot: #05070c;       --dot-op: 0.45;       --dot-on: #05070c;
-    --dot-on-op: 1;       --logo-ink: #05070c;
+    /* 靜置已經是 0.45，hover 要拉到 0.75 才看得出回饋（深底是 0.22 → 0.5） */
+    --dot-on-op: 1;       --dot-hover-op: 0.75; --logo-ink: #05070c;
     --scrim: rgba(247, 245, 242, 0.75);
     --scrim-0: rgba(247, 245, 242, 0);
     color-scheme: light;
@@ -393,7 +394,7 @@
   }
   /* 命中框。不影響排版，所以撐多大都不會動到圓點之間的距離 */
   #dots .dot::after { content: ''; position: absolute; inset: -9px; }
-  #dots .dot:hover::before { opacity: 0.5; }
+  #dots .dot:hover::before { opacity: var(--dot-hover-op); }
   #dots .dot.on::before {
     transform: scale(1.7); opacity: var(--dot-on-op); background: var(--dot-on);
   }
@@ -411,7 +412,9 @@
   #nav .play svg { transform: translateX(1px); }
   /* ── 兩顆開關 ────────────────────────────────────
      深底版的選取態是**黑底白字**：滑塊比軌道更暗，字反白。
-     （淺底版之後要反過來，屆時整組色一起換。）
+     **淺底版不是反過來**：滑塊維持深色、字反白（--knob / --knob-ink）。
+     字面上反過來的話，滑塊在米白紙上會直接消失 —— 這組色要表達的是
+     「被選到的那一格是實心藥丸」，不是「滑塊比頁面亮」。
      狀態掛在 aria-pressed 上，**不另外加 class** ——
      一個狀態兩處記，遲早會不同步。 */
   #nav .switch {
@@ -444,11 +447,15 @@
      看起來才一樣重。 */
   /* 光學對齊。這幾個數字是量出來的，不是猜的：零寬探針取基線，再把同一支
      字型放大 20 倍畫進 canvas、掃像素取墨水邊界，回推到 1× 的位移。
-     **換過字型就要重量**（這一組是 Inter 11px / Noto Sans TC 10px 量的）：
+     這一組是 Poppins 11px / Noto Sans TC 10px 量的：
        水平 — 字距多加在最後一個字後面，排版中心比墨水中心右偏半格。
-              EN +0.155px、中 +0.175px。用 translate 不用 padding：
-              border-box 之下 padding 只把內容中心推一半，換算多一層。
-       垂直 — 行框置中不等於墨水置中。Inter 的 EN 剛好對上（0），
+              EN +0.155px、中 +0.175px。**這一項和用哪支字型無關**：
+              它就是 letter-spacing 的一半（0.03em × 11px ÷ 2 = 0.165px）。
+              用 translate 不用 padding：border-box 之下 padding 只把
+              內容中心推一半，換算多一層。
+       垂直 — 行框置中不等於墨水置中。**換字型要重量的是這一項。**
+              Poppins 的 EN 剛好是 0（hhea 1050 / −350、cap 700，
+              (1050−350)/2 − 700/2 = 0；Inter 算出來也是 0，巧合）。
               中（10px）偏低 0.486px。 */
   #nav .switch--lang .opt--l {
     left: 0; transform: translateX(0.155px);
@@ -968,7 +975,7 @@
       <!-- 以下兩顆是**開關**造型（軌道 + 滑塊）。用 <button> 不用 <a>：
            導覽列的點擊處理只認 a[href^="#"]，所以它們不會誤觸「播放某一章」。
            aria-pressed 同時是 CSS 的狀態來源，也是語言的真實狀態 ——
-           true = 中文（滑塊在右邊的「中」）。深淺那顆還沒接功能。 -->
+           true = 中文（滑塊在右邊的「中」）。深淺那顆同理，true = 淺底。 -->
       <button class="switch switch--lang" type="button"
               aria-label="切換為 English" data-en-label="Switch to Chinese"
               aria-pressed="true">
@@ -6556,8 +6563,9 @@ setLang(firstLang);
 
 /* ── 深淺切換 ──────────────────────────────────────────────
    頁面的色走 CSS 變數（見 :root 與 html[data-theme="light"]），
-   這裡只處理 CSS 碰不到的四件事：粒子的六個色 uniform、uEmissive、
-   兩根 alpha 基準、以及 <meta theme-color> 和 WebGL 的清除色。
+   這裡只處理 CSS 碰不到的：uEmissive、兩根 alpha 基準、讓位深度，
+   以及 <meta theme-color> 和 WebGL 的清除色。
+   **粒子的六個顏色不在這裡，因為它們不用換** —— 理由見 COLORS 上方。
 
    **換主題不必重新烘焙**：點雲只是幾何，沒有顏色。所以深淺是零延遲的，
    不像換語言要等一兩百毫秒重烘。 */
