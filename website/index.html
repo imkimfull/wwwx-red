@@ -955,9 +955,9 @@
     <!-- 三個連結包成一組：手機斷點要把整組搬到畫面最下方（見 #nav .links），
          一個一個 fixed 的話得逐個算位置。 -->
     <span class="links">
-      <!-- 首頁和字標指的是同一件事（都是 #top → playChapter(0)）。留兩個入口是
+      <!-- 這一個和字標指的是同一件事（都是 #top → playChapter(0)）。留兩個入口是
            因為手機上這一排在畫面最下方，手指構得到；字標在最上面。 -->
-      <a href="#top" data-en="Home">首頁</a>
+      <a href="#top" data-en="Brand">品牌</a>
       <a href="#core" data-en="Core">核心</a>
       <a href="#noise" data-en="Reach">擴散</a>
       <a href="#brand" data-en="Contact">聯絡</a>
@@ -5766,9 +5766,10 @@ dotsBox.id = 'dots';
    名稱直接抄導覽列的連結文字 —— 同一個地方兩個入口，講法要一致。 */
 const dotLabel = (st) => {
   const link = document.querySelector('#nav .links a[href="#' + st.el.id + '"]');
-  // 首頁在導覽列上是字標不是文字，只好寫死。讀 <html lang> 不讀 lang 變數：
+  // 第一個停點的 id 是 hero，導覽列那個連結指的是 #top，對不上，只好寫死。
+  // 讀 <html lang> 不讀 lang 變數：
   // 這個函式在 lang 宣告之前就會被叫一次（建點點的時候），會踩到 TDZ
-  if (!link) return document.documentElement.lang === 'en' ? 'Home' : '首頁';
+  if (!link) return document.documentElement.lang === 'en' ? 'Brand' : '品牌';
   return link.textContent.trim();
 };
 const dots = STOPS.map((st, i) => {
