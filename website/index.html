@@ -717,10 +717,12 @@
     /* 三個章節連結搬到畫面最下方。**position: fixed 的關鍵副作用**：
        它脫離 #nav 的排版流，所以那 600px 的最小寬度也跟著消失 ——
        這正是上面那段病灶說的東西，只是這次用「搬走」解，不是「藏起來」。
-       搬走之後這一組自己的寬度只有約 200px，390px 的手機裝得下。 */
+       搬走之後這一組自己的寬度只有 222px（中）／291px（英），
+       加上左右內距，最窄要 295px —— 320px 的老手機也裝得下。
+       間距取 26px 不是桌機那個 30px，就是為了守住這個數字。 */
     #nav .links {
       position: fixed; left: 0; right: 0; bottom: 0;
-      margin-left: 0; justify-content: center; gap: 34px;
+      margin-left: 0; justify-content: center; gap: 26px;
       padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
       /* 整條不吃點擊，只有連結本身吃 —— 不然畫面最下方那一條
          就再也不能拖曳粒子了。 */
@@ -953,6 +955,9 @@
     <!-- 三個連結包成一組：手機斷點要把整組搬到畫面最下方（見 #nav .links），
          一個一個 fixed 的話得逐個算位置。 -->
     <span class="links">
+      <!-- 首頁和字標指的是同一件事（都是 #top → playChapter(0)）。留兩個入口是
+           因為手機上這一排在畫面最下方，手指構得到；字標在最上面。 -->
+      <a href="#top" data-en="Home">首頁</a>
       <a href="#core" data-en="Core">核心</a>
       <a href="#noise" data-en="Reach">擴散</a>
       <a href="#brand" data-en="Contact">聯絡</a>
