@@ -6103,7 +6103,8 @@ function playChapter(i) {
   navStop();
   window.scrollTo(0, chapterStart(i));
   readScroll();          // 瞬移之後補一次，否則狀態還停在原本的位置
-  setPlaying(true);
+  /* **這裡不點亮播放鈕**：導覽列、圓點、語言鍵都走這條，
+     跟著閃等於謊稱「正在整套播放」。閃爍只屬於 playFrom。 */
   if (i === 0) {
     // 首頁那一章不用捲，長度就是逐字浮現走完的時間
     replayHeroIntro();
