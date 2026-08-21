@@ -320,12 +320,11 @@
     max-width: 1280px; margin: 0 auto; height: 100%;
     display: flex; align-items: center; gap: 30px; font-size: 13px;
   }
-  /* 左邊那三個連結是 15px。用 > 限定**直接子層** —— 右上的工具鈕包在
-     .tools 裡，不該跟著變。 */
-  #nav .bar > a:not(.logo) { font-size: 15px; }
+  #nav .links { display: flex; align-items: center; gap: 30px; }
+  #nav .links a { font-size: 15px; }
   /* 字標和第一個連結之間再多留一點：那是兩種東西的分界，
      和連結之間的間距一樣寬的話會讀成四個並列的項目。 */
-  #nav .logo + a { margin-left: 8px; }
+  #nav .logo + .links { margin-left: 8px; }
   /* 字標比旁邊的中文連結再往上 2px。字標的視覺重心偏下（下面那排
      w 的谷底比中文字的下緣還低），照盒子對齊會看起來比連結低一截。
      用 transform 不用 margin：不影響排版，只挪看得見的位置。 */
@@ -700,9 +699,9 @@
      中間那一段的排版誰都沒實際看過 —— 一個斷點只有兩種版面要驗。 */
   /* 手機：命中框 32px（7 + 12.5×2）。點距跟著拉到 35px，
      命中框之間才留得下 3px，不會互相搶。
-     這一條和「導覽列藏起章節連結」同一個斷點 —— 連結一藏，
-     圓點就是唯一的章節入口，25px 的命中框在手指上太小。 */
-  @media (max-width: 720px) {
+     圓點和畫面最下方那排連結是手機上僅有的兩個章節入口，
+     25px 的命中框在手指上太小。 */
+  @media (max-width: 640px) {
     #dots { gap: 28px; }
     #dots .dot::after { inset: -12.5px; }
     /* 導覽列的中間四個連結是**整頁版面寬度的下限**：
@@ -715,7 +714,19 @@
        連結指向的三個 section 本來就是一路捲下去會碰到的，手機上不損失導覽。 */
     #nav { height: 54px; padding: 2px 14px 0; }
     #nav .bar { gap: 14px; }
-    #nav .bar > a:not(.logo) { display: none; }
+    /* 三個章節連結搬到畫面最下方。**position: fixed 的關鍵副作用**：
+       它脫離 #nav 的排版流，所以那 600px 的最小寬度也跟著消失 ——
+       這正是上面那段病灶說的東西，只是這次用「搬走」解，不是「藏起來」。
+       搬走之後這一組自己的寬度只有約 200px，390px 的手機裝得下。 */
+    #nav .links {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      margin-left: 0; justify-content: center; gap: 34px;
+      padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+      /* 整條不吃點擊，只有連結本身吃 —— 不然畫面最下方那一條
+         就再也不能拖曳粒子了。 */
+      pointer-events: none;
+    }
+    #nav .links a { pointer-events: auto; }
     #nav .logo svg { height: 15px; }
 
     /* 面板改成底部抽屜，預設收起。
@@ -939,9 +950,13 @@
     <!-- data-en 是英文版的內容，中文就是元素現在的樣子（見 setLang）。
          data-en-label 走另一條路：這幾個元素裡面裝的是 SVG，換 innerHTML
          會把圖示一起換掉，所以它們只換 aria-label。 -->
-    <a href="#core" data-en="Core">核心</a>
-    <a href="#noise" data-en="Reach">擴散</a>
-    <a href="#brand" data-en="Contact">聯絡</a>
+    <!-- 三個連結包成一組：手機斷點要把整組搬到畫面最下方（見 #nav .links），
+         一個一個 fixed 的話得逐個算位置。 -->
+    <span class="links">
+      <a href="#core" data-en="Core">核心</a>
+      <a href="#noise" data-en="Reach">擴散</a>
+      <a href="#brand" data-en="Contact">聯絡</a>
+    </span>
     <span class="gap"></span>
     <span class="tools">
       <!-- 從頭播一次。三角形取自 lucide 的 play，圓框交給 CSS 畫（見 #nav .icon）。
@@ -5745,7 +5760,7 @@ dotsBox.id = 'dots';
 /* 點也能按，行為和左上導覽列一樣：跳到那一章的開頭再播那一章。
    名稱直接抄導覽列的連結文字 —— 同一個地方兩個入口，講法要一致。 */
 const dotLabel = (st) => {
-  const link = document.querySelector('#nav .bar > a[href="#' + st.el.id + '"]');
+  const link = document.querySelector('#nav .links a[href="#' + st.el.id + '"]');
   // 首頁在導覽列上是字標不是文字，只好寫死。讀 <html lang> 不讀 lang 變數：
   // 這個函式在 lang 宣告之前就會被叫一次（建點點的時候），會踩到 TDZ
   if (!link) return document.documentElement.lang === 'en' ? 'Home' : '首頁';
